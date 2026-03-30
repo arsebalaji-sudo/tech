@@ -1,50 +1,63 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+const startBtn = document.getElementById("startBtn");
+const scoreText = document.getElementById("scoreText");
+const ui = document.getElementById("ui");
+
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Player
-let player = {
-  x: 100,
-  y: canvas.height / 2,
-  size: 20,
-  dy: 0,
-  gravity: 0.5,
-  color: "cyan"
-};
+let player, obstacles, stars, score, running;
 
-// Obstacles
-let obstacles = [];
-let score = 0;
+// Initialize game
+function init() {
+  player = {
+    x: 100,
+    y: canvas.height / 2,
+    size: 15,
+    dy: 0,
+    gravity: 0.5
+  };
 
-// Stars (for better graphics)
-let stars = [];
-for (let i = 0; i < 100; i++) {
-  stars.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    size: Math.random() * 2
-  });
+  obstacles = [];
+  stars = [];
+  score = 0;
+  running = true;
+
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: Math.random() * 2
+    });
+  }
 }
 
 // Spawn obstacles
 function spawnObstacle() {
-  let height = Math.random() * (canvas.height - 150) + 50;
+  if (!running) return;
+
+  let gap = 150;
+  let topHeight = Math.random() * (canvas.height - gap);
+
   obstacles.push({
     x: canvas.width,
-    y: height,
-    width: 20,
-    height: 100
+    width: 40,
+    top: topHeight,
+    bottom: topHeight + gap
   });
+
+  setTimeout(spawnObstacle, 1200);
 }
-setInterval(spawnObstacle, 1500);
 
 // Game loop
 function update() {
+  if (!running) return;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Draw stars (background animation)
+  // Stars
   ctx.fillStyle = "white";
   stars.forEach(star => {
     star.x -= 0.5;
@@ -52,61 +65,78 @@ function update() {
     ctx.fillRect(star.x, star.y, star.size, star.size);
   });
 
-  // Player physics
+  // Player
   player.dy += player.gravity;
   player.y += player.dy;
 
-  // Draw player (glow effect)
-  ctx.shadowBlur = 20;
-  ctx.shadowColor = player.color;
-  ctx.fillStyle = player.color;
+  ctx.fillStyle = "cyan";
   ctx.beginPath();
   ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
 
   // Obstacles
   ctx.fillStyle = "red";
   obstacles.forEach((obs, index) => {
-    obs.x -= 6;
-    ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+    obs.x -= 5;
+
+    // Top block
+    ctx.fillRect(obs.x, 0, obs.width, obs.top);
+
+    // Bottom block
+    ctx.fillRect(obs.x, obs.bottom, obs.width, canvas.height);
 
     // Collision
     if (
       player.x + player.size > obs.x &&
       player.x - player.size < obs.x + obs.width &&
-      player.y + player.size > obs.y &&
-      player.y - player.size < obs.y + obs.height
+      (player.y - player.size < obs.top ||
+        player.y + player.size > obs.bottom)
     ) {
-      alert("Game Over! Score: " + score);
-      location.reload();
+      gameOver();
     }
 
-    // Remove off screen
+    // Score
+    if (obs.x + obs.width < player.x && !obs.passed) {
+      obs.passed = true;
+      score++;
+      scoreText.innerText = "Score: " + score;
+    }
+
+    // Remove
     if (obs.x < -obs.width) {
       obstacles.splice(index, 1);
-      score++;
     }
   });
 
-  // Score
-  ctx.fillStyle = "white";
-  ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score, 20, 30);
-
   requestAnimationFrame(update);
 }
-update();
 
-// Controls
+// Jump
 function jump() {
-  player.dy = -10;
+  if (!running) return;
+  player.dy = -8;
 }
 
+// Game Over
+function gameOver() {
+  running = false;
+  ui.style.display = "block";
+  startBtn.innerText = "Restart";
+}
+
+// Start game
+startBtn.onclick = () => {
+  ui.style.display = "none";
+  init();
+  spawnObstacle();
+  update();
+};
+
+// Controls
 window.addEventListener("keydown", jump);
 window.addEventListener("touchstart", jump);
 
-// Resize handling
+// Resize
 window.addEventListener("resize", () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
