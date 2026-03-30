@@ -3,34 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Test Project</title>
-
-    <!-- Link CSS -->
+    <title>Catch The Box Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<header>
-    🚀 My First Multi-File Project
-</header>
+<h1>🎯 Catch The Box</h1>
 
-<div class="container">
-    <div class="card">
-        <h2>Hello, I'm Balaji</h2>
-        <p>This project uses separate HTML, CSS, and JS files.</p>
-
-        <button id="btn">Click Me</button>
-        <p id="message"></p>
-    </div>
+<div class="info">
+    <p>Score: <span id="score">0</span></p>
+    <p>Time: <span id="time">10</span>s</p>
 </div>
 
-<footer>
-    © 2026 | GitHub Project
-</footer>
+<div id="gameArea">
+    <div id="box"></div>
+</div>
 
-<!-- Link JS -->
+<button onclick="startGame()">Start Game</button>
+
 <script src="script.js"></script>
-
 </body>
 </html>
